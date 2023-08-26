@@ -60,7 +60,7 @@ resource "azurerm_windows_virtual_machine" "vtas_vm" {
   computer_name = "vtas-host"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  size = "Standard_DS1_v2"
+  size = "Standard_B2s"
   admin_username = "adminuser"
   admin_password = "avingAg1raffe!"
   network_interface_ids = [azurerm_network_interface.vtas_nic.id]
@@ -83,6 +83,26 @@ resource "azurerm_windows_virtual_machine" "vtas_vm" {
   }
 }
 
+resource "azurerm_network_security_group" "vtas_nsg" {
+  name                = "keeonline-vtas-nsg"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+resource "azurerm_network_security_rule" "vtas_nsg_rdp" {
+  name                        = "keeonline-vtas-nsg-rdp"
+  priority                    = 100
+  direction                   = "Outbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "3389"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.rg.name
+  network_security_group_name = azurerm_network_security_group.vtas_nsg.name
+}
+
 
 # Create the application host vm
 
@@ -90,7 +110,8 @@ resource "azurerm_public_ip" "app_pip" {
   name                = "keeonline-app-pip"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  allocation_method   = "Dynamic"
+  allocation_method   = "Static"
+  sku                 = "Basic"
 }
 
 
@@ -112,7 +133,7 @@ resource "azurerm_linux_virtual_machine" "app_vm" {
   computer_name = "app-host"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  size = "Standard_DS1_v2"
+  size = "Standard_B2s"
   disable_password_authentication = false
   admin_username = "adminuser"
   admin_password = "avingAg1raffe!"
@@ -130,12 +151,55 @@ resource "azurerm_linux_virtual_machine" "app_vm" {
     sku       = "20_04-lts-gen2"
     version   = "latest"
   }
-
 }
 
+resource "azurerm_network_security_group" "app_nsg" {
+  name                = "keeonline-app-nsg"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+}
 
+resource "azurerm_network_security_rule" "app_nsg_ssh" {
+  name                        = "keeonline-app-nsg-ssh"
+  priority                    = 100
+  direction                   = "Outbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "22"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.rg.name
+  network_security_group_name = azurerm_network_security_group.app_nsg.name
+}
 
+# Create the ACR
 
+resource "azurerm_container_registry" "acr" {
+  name                = "keeonlineacr"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  sku                 = "Basic"
+}
 
+# Create the fileshare
 
-# Create the VTAS deployment fileshare
+resource "azurerm_storage_account" "fs_sa" {
+  name                     = "keeonlinefssa"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+resource "azurerm_storage_share" "fs" {
+  name                 = "keeonline-fs"
+  storage_account_name = azurerm_storage_account.fs_sa.name
+  quota                = 5
+}
+
+resource "azurerm_storage_share_directory" "fs_dir_vtas" {
+  name                 = "vtas-binaries"
+  share_name           = azurerm_storage_share.fs.name
+  storage_account_name = azurerm_storage_account.fs_sa.name
+}
