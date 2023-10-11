@@ -33,6 +33,90 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes = ["10.0.1.0/24"]
 }
 
+# # Create the browser host
+
+# resource "azurerm_public_ip" "browser_pip" {
+#   name                = "keeonline-browser-pip"
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+#   allocation_method   = "Dynamic"
+# }
+
+# resource "azurerm_network_interface" "browser_nic" {
+#   name                = "keeonline-browser-nic"
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+
+#   ip_configuration {
+#     name                          = "keeonline_browser_nic_config"
+#     subnet_id                     = azurerm_subnet.subnet.id
+#     private_ip_address_allocation = "Dynamic"
+#     public_ip_address_id          = azurerm_public_ip.browser_pip.id
+#   }
+# }
+
+# resource "azurerm_network_security_group" "windows_nsg" {
+#   name                = "keeonline-windows-nsg"
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+# }
+
+# resource "azurerm_network_security_rule" "windows_nsg_rdp" {
+#   name                        = "keeonline-windows-nsg-rdp"
+#   priority                    = 100
+#   direction                   = "Inbound"
+#   access                      = "Allow"
+#   protocol                    = "Tcp"
+#   source_port_range           = "*"
+#   destination_port_range      = "3389"
+#   source_address_prefix       = "*"
+#   destination_address_prefix  = "*"
+#   resource_group_name         = azurerm_resource_group.rg.name
+#   network_security_group_name = azurerm_network_security_group.windows_nsg.name
+# }
+
+# resource "azurerm_network_interface_security_group_association" "browser_nsg" {
+#   network_interface_id      = azurerm_network_interface.browser_nic.id
+#   network_security_group_id = azurerm_network_security_group.windows_nsg.id
+# }
+
+# resource "azurerm_subnet_network_security_group_association" "subnet_nsg" {
+#   subnet_id       = azurerm_subnet.subnet.id
+#   network_security_group_id = azurerm_network_security_group.windows_nsg.id
+# }
+
+# resource "azurerm_windows_virtual_machine" "browser_vm" {
+#   name = "keeonline-browser-vm"
+#   computer_name = "browser-host"
+#   resource_group_name = azurerm_resource_group.rg.name
+#   location            = azurerm_resource_group.rg.location
+#   size = "Standard_B1s"
+#   admin_username = "adminuser"
+#   admin_password = "avingAg1raffe!"
+#   network_interface_ids = [azurerm_network_interface.browser_nic.id]
+
+#   os_disk {
+#     name = "keeonline-browser-os-disk"
+#     caching              = "ReadWrite"
+#     storage_account_type = "Standard_LRS"
+#   }
+
+#   source_image_reference {
+#     publisher = "MicrosoftWindowsServer"
+#     offer     = "WindowsServer"
+#     sku       = "2022-Datacenter"
+#     version   = "latest"
+#   }
+
+#   winrm_listener {
+#     protocol = "Http"
+#   }
+# }
+
+
+
+
+
 # Create the VTAS host vm
 
 resource "azurerm_public_ip" "vtas_pip" {
@@ -55,12 +139,13 @@ resource "azurerm_network_interface" "vtas_nic" {
   }
 }
 
-resource "azurerm_windows_virtual_machine" "vtas_vm" {
+resource "azurerm_linux_virtual_machine" "vtas_vm" {
   name = "keeonline-vtas-vm"
   computer_name = "vtas-host"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  size = "Standard_B2s"
+  size = "Standard_B1s"
+  disable_password_authentication = false
   admin_username = "adminuser"
   admin_password = "avingAg1raffe!"
   network_interface_ids = [azurerm_network_interface.vtas_nic.id]
@@ -72,37 +157,34 @@ resource "azurerm_windows_virtual_machine" "vtas_vm" {
   }
 
   source_image_reference {
-    publisher = "MicrosoftWindowsServer"
-    offer     = "WindowsServer"
-    sku       = "2022-Datacenter"
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-focal"
+    sku       = "20_04-lts-gen2"
     version   = "latest"
   }
 
-  winrm_listener {
-    protocol = "Http"
-  }
+  custom_data = filebase64("scripts/linux.sh")
 }
 
-resource "azurerm_network_security_group" "vtas_nsg" {
-  name                = "keeonline-vtas-nsg"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-}
+# resource "azurerm_network_security_group" "vtas_nsg" {
+#   name                = "keeonline-vtas-nsg"
+#   location            = azurerm_resource_group.rg.location
+#   resource_group_name = azurerm_resource_group.rg.name
+# }
 
-resource "azurerm_network_security_rule" "vtas_nsg_rdp" {
-  name                        = "keeonline-vtas-nsg-rdp"
-  priority                    = 100
-  direction                   = "Outbound"
-  access                      = "Allow"
-  protocol                    = "Tcp"
-  source_port_range           = "*"
-  destination_port_range      = "3389"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.rg.name
-  network_security_group_name = azurerm_network_security_group.vtas_nsg.name
-}
-
+# resource "azurerm_network_security_rule" "vtas_nsg_ssh" {
+#   name                        = "keeonline-vtas-nsg-ssh"
+#   priority                    = 100
+#   direction                   = "Inbound"
+#   access                      = "Allow"
+#   protocol                    = "Tcp"
+#   source_port_range           = "*"
+#   destination_port_range      = "22"
+#   source_address_prefix       = "*"
+#   destination_address_prefix  = "*"
+#   resource_group_name         = azurerm_resource_group.rg.name
+#   network_security_group_name = azurerm_network_security_group.vtas_nsg.name
+# }
 
 # Create the application host vm
 
@@ -133,7 +215,7 @@ resource "azurerm_linux_virtual_machine" "app_vm" {
   computer_name = "app-host"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  size = "Standard_B2s"
+  size = "Standard_B1s"
   disable_password_authentication = false
   admin_username = "adminuser"
   admin_password = "avingAg1raffe!"
@@ -151,55 +233,78 @@ resource "azurerm_linux_virtual_machine" "app_vm" {
     sku       = "20_04-lts-gen2"
     version   = "latest"
   }
+
+  custom_data = filebase64("scripts/linux.sh")
 }
 
-resource "azurerm_network_security_group" "app_nsg" {
-  name                = "keeonline-app-nsg"
-  resource_group_name = azurerm_resource_group.rg.name
+# Create the repository host vm
+
+resource "azurerm_public_ip" "repo_pip" {
+  name                = "keeonline-repo-pip"
   location            = azurerm_resource_group.rg.location
-}
-
-resource "azurerm_network_security_rule" "app_nsg_ssh" {
-  name                        = "keeonline-app-nsg-ssh"
-  priority                    = 100
-  direction                   = "Outbound"
-  access                      = "Allow"
-  protocol                    = "Tcp"
-  source_port_range           = "*"
-  destination_port_range      = "22"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.rg.name
-  network_security_group_name = azurerm_network_security_group.app_nsg.name
-}
-
-# Create the ACR
-
-resource "azurerm_container_registry" "acr" {
-  name                = "keeonlineacr"
   resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
+  allocation_method   = "Static"
   sku                 = "Basic"
 }
 
-# Create the fileshare
 
-resource "azurerm_storage_account" "fs_sa" {
-  name                     = "keeonlinefssa"
+resource "azurerm_network_interface" "repo_nic" {
+  name                = "keeonline-repo-nic"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  ip_configuration {
+    name                          = "keeonline_repo_nic_config"
+    subnet_id                     = azurerm_subnet.subnet.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.repo_pip.id
+  }
+}
+
+resource "azurerm_linux_virtual_machine" "repo_vm" {
+  name = "keeonline-repo-vm"
+  computer_name = "repo-host"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
+  size = "Standard_B1s"
+  disable_password_authentication = false
+  admin_username = "adminuser"
+  admin_password = "avingAg1raffe!"
+  network_interface_ids = [azurerm_network_interface.repo_nic.id]
+
+  os_disk {
+    name = "keeonline-repo-os-disk"
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-focal"
+    sku       = "20_04-lts-gen2"
+    version   = "latest"
+  }
+
+  custom_data = filebase64("scripts/repo.sh")
 }
 
-resource "azurerm_storage_share" "fs" {
-  name                 = "keeonline-fs"
-  storage_account_name = azurerm_storage_account.fs_sa.name
-  quota                = 5
-}
+# resource "azurerm_network_security_group" "repo_nsg" {
+#   name                = "keeonline-repo-nsg"
+#   resource_group_name = azurerm_resource_group.rg.name
+#   location            = azurerm_resource_group.rg.location
+# }
 
-resource "azurerm_storage_share_directory" "fs_dir_vtas" {
-  name                 = "vtas-binaries"
-  share_name           = azurerm_storage_share.fs.name
-  storage_account_name = azurerm_storage_account.fs_sa.name
-}
+# resource "azurerm_network_security_rule" "repo_nsg_ssh" {
+#   name                        = "keeonline-repo-nsg-ssh"
+#   priority                    = 100
+#   direction                   = "Outbound"
+#   access                      = "Allow"
+#   protocol                    = "Tcp"
+#   source_port_range           = "*"
+#   destination_port_range      = "22"
+#   source_address_prefix       = "*"
+#   destination_address_prefix  = "*"
+#   resource_group_name         = azurerm_resource_group.rg.name
+#   network_security_group_name = azurerm_network_security_group.repo_nsg.name
+# }
+
