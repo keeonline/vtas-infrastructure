@@ -79,6 +79,10 @@ resource "azurerm_linux_virtual_machine" "vtas_vm" {
     version   = "latest"
   }
 
+  tags = {
+    ansible = "vtas"
+  }
+
   custom_data = filebase64("scripts/vtas.sh")
 }
 
@@ -150,7 +154,11 @@ resource "azurerm_linux_virtual_machine" "app_vm" {
     version   = "latest"
   }
 
-  custom_data = filebase64("scripts/app.sh")
+  tags = {
+    ansible = "application"
+  }
+
+  custom_data = filebase64("scripts/application.sh")
 }
 
 # Create the repository host vm
@@ -201,7 +209,11 @@ resource "azurerm_linux_virtual_machine" "repo_vm" {
     version   = "latest"
   }
 
-  custom_data = filebase64("scripts/repo.sh")
+  tags = {
+    ansible = "repository"
+  }
+
+  custom_data = filebase64("scripts/repository.sh")
 }
 
 # resource "azurerm_network_security_group" "repo_nsg" {
