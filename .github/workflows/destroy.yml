@@ -1,0 +1,28 @@
+name: Destroy infrastructure
+
+on: workflow_dispatch
+
+jobs:
+  execute:
+    name: Destroy VTAS infrastructure
+    runs-on: ubuntu-latest
+    environment: DEMO
+    env:
+      ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+      ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      ARM_ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Initialise plan
+        run: terraform init
+
+      - name: Destroy plan
+        run: terraform destroy --auto-approve

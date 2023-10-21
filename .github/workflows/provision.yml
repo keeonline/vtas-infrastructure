@@ -1,10 +1,10 @@
-name: Provision VTAS infrastructure
+name: Provision infrastructure
 
 on: workflow_dispatch
 
 jobs:
   execute:
-    name: Terraform Validation and Build
+    name: Provision VTAS infrastructure
     runs-on: ubuntu-latest
     environment: DEMO
     env:
