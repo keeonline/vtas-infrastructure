@@ -7,8 +7,8 @@ permissions:
   contents: read
 
 jobs:
-  provision-infrastructure:
-    name: Provision infrastructure
+  provision-core-infrastructure:
+    name: Provision core infrastructure
     runs-on: ubuntu-latest
     environment: DEMO
     env:
@@ -26,16 +26,43 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Initialise infrastructure plan
-        working-directory: ./terraform
+        working-directory: ./terraform/core
         run: terraform init
 
       - name: Apply infrastructure plan
-        working-directory: ./terraform
+        working-directory: ./terraform/core
         run: terraform apply --auto-approve
 
-  install-VTAS:
+  provision-ephemeral-infrastructure:
+    name: Provision ephemeral infrastructure
+    needs: [provision-core-infrastructure]
+    runs-on: ubuntu-latest
+    environment: DEMO
+    env:
+      ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+      ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      ARM_ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Initialise infrastructure plan
+        working-directory: ./terraform/repo
+        run: terraform init
+
+      - name: Apply infrastructure plan
+        working-directory: ./terraform/repo
+        run: terraform apply --auto-approve
+
+  install-vtas:
     name: Install VTAS and drivers
-    needs: [provision-infrastructure]
+    needs: [provision-ephemeral-infrastructure]
     runs-on: ubuntu-latest
     environment: DEMO
 
@@ -87,3 +114,32 @@ jobs:
         run: |
           ansible-playbook -i hosts -v ping.yml
           ansible-playbook -i hosts -v vtas.yml
+
+  destroy-ephemeral-infrastructure:
+    name: Destroy ephemeral infrastructure
+    needs: [install-vtas]
+    runs-on: ubuntu-latest
+    environment: DEMO
+    env:
+      ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+      ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      ARM_ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Initialise infrastructure plan
+        working-directory: ./terraform/repo
+        run: terraform init
+
+      - name: Apply infrastructure plan
+        working-directory: ./terraform/repo
+        run: terraform destroy --auto-approve
+
+        
