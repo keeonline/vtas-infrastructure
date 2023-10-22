@@ -1,4 +1,4 @@
-name: Provision infrastructure
+name: Provision infrastructure and install VTAS
 
 on: workflow_dispatch
 
@@ -7,8 +7,8 @@ permissions:
   contents: read
 
 jobs:
-  provision-core-infrastructure:
-    name: Provision core infrastructure
+  provision-infrastructure:
+    name: Provision infrastructure
     runs-on: ubuntu-latest
     environment: DEMO
     env:
@@ -35,7 +35,7 @@ jobs:
 
   install-VTAS:
     name: Install VTAS and drivers
-    needs: [provision-core-infrastructure]
+    needs: [provision-infrastructure]
     runs-on: ubuntu-latest
     environment: DEMO
 
