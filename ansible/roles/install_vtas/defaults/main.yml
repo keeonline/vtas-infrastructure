@@ -5,8 +5,7 @@ install_vtas_workdir: /opt/temp/vtas
 install_vtas_base_dir: /usr/vtas_base
 install_vtas_jdk_home: /usr/lib/jvm/java-1.11.0-openjdk-amd64
 
-install_vtas_ip_addr_repository: ''
-install_vtas_ip_addr_vtas: ''
+install_vtas_repository_host: localhost
 
 install_vtas_archive: /tmp/vtas.zip
 install_vtas_bin_archive_pathname: install/bin/VersaTestAS64.bin

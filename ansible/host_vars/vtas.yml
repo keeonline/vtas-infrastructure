@@ -1,1 +1,3 @@
-install_vtas_archive: 'http://{{ hostvars[ "repository" ].ansible_host }}:8080/ascert/vtas.zip'
+install_vtas_repository_host: '{{ hostvars[ "repository" ].ansible_host }}'
+
+install_vtas_archive: 'http://{{ install_vtas_repository_host }}:8080/ascert/vtas.zip'
