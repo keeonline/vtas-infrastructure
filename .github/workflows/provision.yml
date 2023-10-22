@@ -30,6 +30,7 @@ jobs:
         run: terraform apply --auto-approve
 
   install-VTAS:
+    name: Install VTAS and drivers
     needs: [provision-core-infrastructure]
     runs-on: ubuntu-latest
     environment: DEMO
