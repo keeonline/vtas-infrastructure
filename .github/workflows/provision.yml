@@ -1,4 +1,4 @@
-name: Provision infrastructure and install VTAS
+name: Provision cloud infrastructure and install VTAS
 
 on: workflow_dispatch
 
