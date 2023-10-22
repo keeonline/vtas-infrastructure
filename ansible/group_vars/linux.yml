@@ -1,0 +1,3 @@
+ansible_user: adminuser
+ansible_password: avingAg1raffe!
+ansible_become: true

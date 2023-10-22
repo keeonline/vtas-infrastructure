@@ -1,0 +1,118 @@
+- name: Ensure the VTAS install working directory is removed
+  ansible.builtin.file:
+    path: '{{ install_vtas_workdir }}'
+    state: absent
+
+- name: Ensure VTAS install working directory exists
+  ansible.builtin.file:
+    path: '{{ install_vtas_workdir }}'
+    state: directory
+
+- name: show arhive location
+  ansible.builtin.debug:
+    var: install_vtas_archive
+
+- name: pull and unpack the installation archive from the repository
+  ansible.builtin.unarchive:
+    src: '{{ install_vtas_archive }}'
+    dest: '{{ install_vtas_workdir }}'
+    remote_src: yes  
+
+- name: Determine if previous VTAS deployment is present
+  ansible.builtin.stat:
+    path: '{{ install_vtas_home_dir }}/uninstaller/uninstall'
+  register: install_vtas_status
+
+- name: Uninstall existing VTAS deployment (if present)
+  ansible.builtin.command:
+    argv:
+    - '{{ install_vtas_home_dir }}/uninstaller/uninstall'
+    - '-q'
+  when: install_vtas_status.stat.exists
+
+- name: Clean existing install directory (if present)
+  ansible.builtin.file:
+    path: '{{ install_vtas_home_dir }}'
+    state: absent
+
+- name: Ensure VTAS base directory exists
+  ansible.builtin.file:
+    path: '{{ install_vtas_base_dir }}'
+    state: directory
+
+- name: Create the installation variable file
+  ansible.builtin.template:
+    src: varfile.j2
+    dest: '{{ install_vtas_workdir }}/{{ install_vtas_varfile_filename }}'
+
+- name: Ensure the install binary is executable
+  ansible.builtin.file:
+    path: '{{ install_vtas_workdir }}/{{ install_vtas_bin_archive_pathname }}'
+    state: file
+    mode: u+x,g+x,o+x
+
+# - name: Install VTAS
+#   ansible.builtin.command:
+#     argv:
+#     - '{{ install_vtas_workdir }}/{{ install_vtas_bin_archive_pathname }}'
+#     - '-q'
+#     - '-dir'
+#     - '{{ install_vtas_home_dir }}'
+#     - '-Dsys.installationDir={{ install_vtas_home_dir }}'
+#     - '-Dvtlice.location={{ install_vtas_license_pathname }}'
+#     - '-DvtasBase={{ install_vtas_base_dir }}'
+#     - '-DjvmHome={{ install_vtas_jdk_home }}'
+#     # - '-varfile {{ install_vtas_workdir }}/{{ install_vtas_varfile_filename }}'
+
+- name: Install VTAS
+  ansible.builtin.expect:
+    command: '{{ install_vtas_workdir }}/{{ install_vtas_bin_archive_pathname }} -varfile {{ install_vtas_workdir }}/{{ install_vtas_varfile_filename }}'
+    echo: yes
+    responses:
+      "OK \\[o, Enter\\], Cancel \\[c\\]" : 'o'
+      "\\[/opt/vt\\]" : "\n"
+      "\\[1,2,3\\]" : '1'
+      "Yes \\[y\\], No \\[n, Enter\\]" : 'n'
+      "Yes \\[y, Enter\\], No \\[n\\]" : 'n'
+      "Use detected JDK \\(2 found\\) \\[1, Enter\\], Specify alternative JDK base directory \\[2\\]" : '1'
+      "\\[2\\]" : '2'
+      "\\[/usr/vtas_base\\]" : "\n"
+      "\\[/opt/temp/vtas/license/vtlice.txt\\]" : "\n"
+#      "\\[\\]" : "\n"
+      "\\[Install / Enter\\]" : "\n"
+
+- name: Ensure var directory is writable
+  ansible.builtin.file:
+    path: '{{ install_vtas_home_dir }}/var'
+    state: directory
+    mode: u+w,g+w,o+w
+
+- name: Ensure base directory is writable
+  ansible.builtin.file:
+    path: '{{ install_vtas_base_dir }}'
+    state: directory
+    mode: u+w,g+w,o+w
+
+- name: Copy the license file to the install directory
+  ansible.builtin.copy:
+    src: '{{ install_vtas_workdir }}/{{ install_vtas_license_archive_pathname }}'
+    dest: '{{ install_vtas_license_pathname }}'
+    remote_src: true
+
+- name: Create driver directory
+  ansible.builtin.file:
+    path: '{{ install_vtas_home_dir }}/var/fs/driverlib/local'
+    state: directory
+    mode: u+w,g+w,o+w
+
+- name: Copy the list of drivers into driver directory
+  ansible.builtin.copy:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+    remote_src: true
+  loop: "{{ install_vtas_driver_archive_pathnames }}"
+
+- name: Start the VTAS
+  ansible.builtin.shell: 
+#    cmd: '{{ install_vtas_home_dir }}/bin/vtas.sh > ~/vtas.log &'
+    cmd: '( ( nohup {{ install_vtas_home_dir }}/bin/vtas.sh > ~/vtas.log ) & )'
