@@ -12,7 +12,13 @@
   ansible.builtin.debug:
     var: install_vtas_archive
 
-- name: pull and unpack the installation archive from the repository
+- name: Wait for artefact repository readiness
+  ansible.builtin.wait_for:
+    host: {{ hostvars[ "repository" ].ansible_host }}
+    port: 8080
+    timeout: 300
+
+- name: pull and unpack the installation archive from the artefact repository
   ansible.builtin.unarchive:
     src: '{{ install_vtas_archive }}'
     dest: '{{ install_vtas_workdir }}'
