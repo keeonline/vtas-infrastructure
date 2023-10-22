@@ -14,7 +14,7 @@
 
 - name: Wait for artefact repository readiness
   ansible.builtin.wait_for:
-    host: {{ hostvars[ "repository" ].ansible_host }}
+    host: '{{ install_vtas_repository_host }}'
     port: 8080
     timeout: 300
 
