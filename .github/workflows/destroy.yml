@@ -22,7 +22,9 @@ jobs:
         uses: hashicorp/setup-terraform@v2
 
       - name: Initialise plan
+        working-directory: ./terraform
         run: terraform init
 
       - name: Destroy plan
+        working-directory: ./terraform
         run: terraform destroy --auto-approve
