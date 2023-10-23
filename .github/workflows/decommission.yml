@@ -1,10 +1,10 @@
-name: Destroy cloud infrastructure
+name: Decommission cloud infrastructure
 
 on: workflow_dispatch
 
 jobs:
   execute:
-    name: Destroy VTAS infrastructure
+    name: Decommission VTAS infrastructure
     runs-on: ubuntu-latest
     environment: DEMO
     env:
