@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   provision-infrastructure:
-    name: Provision core infrastructure
+    name: Provision VTAS infrastructure
     runs-on: ubuntu-latest
     environment: DEMO
     env:
@@ -78,12 +78,12 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      # - name: Setup Ansible on GHR
-      #   run: |
-      #     sudo apt update
-      #     sudo apt install software-properties-common
-      #     sudo add-apt-repository --yes --update ppa:ansible/ansible
-      #     sudo apt install ansible -y
+      - name: Setup Ansible on GHR
+        run: |
+          sudo apt update
+          sudo apt install software-properties-common
+          sudo add-apt-repository --yes --update ppa:ansible/ansible
+          sudo apt install ansible -y
 
       - name: Setup Azure CLI on GHR
         run: |
@@ -121,14 +121,14 @@ jobs:
           AZURE_CLIENT_ID: ${{ secrets.DEMO_CLIENT_ID }}
         run: |
           # ansible-playbook -i hosts -v ping.yml
-          # ansible-playbook -i hosts -v vtas.yml
-          docker run --rm --name ansible-runner \
-          -e AZURE_SUBSCRIPTION_ID=${{ secrets.SUBSCRIPTION_ID }} \
-          -e AZURE_TENANT_ID=${{ secrets.TENANT_ID }} \
-          -e AZURE_CLIENT_ID=${{ secrets.DEMO_CLIENT_ID }} \
-          -e ANSIBLE_PLAYBOOK vtas.yml \
-          -v $(pwd):/usr/ansible \
-          keeonline/ansible:latest
+          ansible-playbook -i hosts -v vtas.yml
+          # docker run --rm --name ansible-runner \
+          # -e AZURE_SUBSCRIPTION_ID=${{ secrets.SUBSCRIPTION_ID }} \
+          # -e AZURE_TENANT_ID=${{ secrets.TENANT_ID }} \
+          # -e AZURE_CLIENT_ID=${{ secrets.DEMO_CLIENT_ID }} \
+          # -e ANSIBLE_PLAYBOOK vtas.yml \
+          # -v $(pwd):/usr/ansible \
+          # keeonline/ansible:latest
 
   destroy-ephemeral-infrastructure:
     name: Destroy ephemeral infrastructure
