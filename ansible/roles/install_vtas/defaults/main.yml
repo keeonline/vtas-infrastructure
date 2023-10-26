@@ -19,3 +19,5 @@ install_vtas_driver_archive_pathnames:
     dest: '{{ install_vtas_home_dir }}/var/fs/driverlib/local/eftlib.jar'
   - src: '{{ install_vtas_workdir }}/install/drivers/mcbn_driver.jar'
     dest: '{{ install_vtas_home_dir }}/var/fs/driverlib/local/mcbn_driver.jar'
+  - src: '{{ install_vtas_workdir }}/install/drivers/com.ascert.driver.json-ver-1.1.0.jar'
+    dest: '{{ install_vtas_home_dir }}/var/fs/driverlib/local/com.ascert.driver.json-ver-1.1.0.jar'
