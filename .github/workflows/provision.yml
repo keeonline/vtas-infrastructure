@@ -84,7 +84,7 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.TENANT_ID }}
           AZURE_CLIENT_ID: ${{ secrets.DEMO_CLIENT_ID }}
         run: |
-          ansible-playbook -i hosts -v vtas.yml -e install_vtas_repository_host ${REPO_HOST}
+          ansible-playbook -i hosts -v vtas.yml -e "install_vtas_repository_host=${REPO_HOST}"
 
   destroy-ephemeral-infrastructure:
     name: Destroy ephemeral infrastructure
