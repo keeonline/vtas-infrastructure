@@ -17,6 +17,8 @@ jobs:
       ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
       ARM_ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+    outputs:
+      vtas_ip_addr: ${{ steps.vtas.outputs.vtas_ip_addr }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -28,19 +30,16 @@ jobs:
         working-directory: ./terraform/core
         run: terraform init
       - name: Apply plan for core infrastructure
-        id: apply_core
         working-directory: ./terraform/core
         run: terraform apply --auto-approve
-      - name: Show VTAS host IP address
+      - name: Set VTAS host IP address
+        id: vtas
         working-directory: ./terraform/core
         run: |
           TEMP=$(terraform output vtas_host_ip_addr)
           VTAS_HOST_IP_ADDR=$(echo $TEMP | tr -d '"')
-          echo here1
-          echo VTAS HOST IP = ${VTAS_HOST_IP_ADDR}
-          echo here2
-          echo xxxxx=${VTAS_HOST_IP_ADDR}
-          echo bob =  ${{ steps.apply_core.outputs.vtas_host_ip_addr }}
+          echo "::set-output name=vtas_ip_addr::${VTAS_HOST_IP_ADDR}"
+          echo VTAS_HOST_IP_ADDR=${VTAS_HOST_IP_ADDR}
       - name: Initialise plan for ephemeral infrastructure
         working-directory: ./terraform/repo
         run: terraform init
@@ -56,6 +55,10 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+      - name: Show VTAS host IP address
+        env:
+          VTAS_HOST_IP_ADDR: ${{needs.provision-infrastructure.outputs.vtas_ip_addr}}
+        run: echo VTAS_HOST_IP_ADDR=${VTAS_HOST_IP_ADDR}
       - name: Setup Ansible on GHR
         run: |
           sudo apt update
