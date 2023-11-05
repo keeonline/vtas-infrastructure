@@ -19,7 +19,7 @@ jobs:
       ARM_ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
     outputs:
       vtas_ip_addr: ${{ steps.vtas.outputs.vtas_ip_addr }}
-      repo_ip_addr: ${{ steps.vtas.outputs.repo_ip_addr }}
+      repo_ip_addr: ${{ steps.repo.outputs.repo_ip_addr }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
