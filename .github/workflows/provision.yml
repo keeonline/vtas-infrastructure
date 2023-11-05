@@ -32,8 +32,11 @@ jobs:
         working-directory: ./terraform/repo
         run: terraform init
       - name: Apply plan for ephemeral infrastructure
+        id: apply
         working-directory: ./terraform/repo
         run: terraform apply --auto-approve
+      - name: Show VTAS host IP address
+        run: echo ****** VTAS HOST IP=${{ steps.apply.outputs.vtas_host_ip_addr }}
 
   install-vtas:
     name: Install VTAS and drivers
