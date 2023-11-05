@@ -10,7 +10,7 @@ jobs:
   provision-infrastructure:
     name: Provision VTAS infrastructure
     runs-on: ubuntu-latest
-    environment: DEMO
+#    environment: DEMO
     env:
       ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
@@ -60,7 +60,7 @@ jobs:
     name: Install VTAS and drivers
     needs: [provision-infrastructure]
     runs-on: ubuntu-latest
-    environment: DEMO
+#    environment: DEMO
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
@@ -95,7 +95,7 @@ jobs:
     name: Decommission ephemeral infrastructure
     needs: [install-vtas]
     runs-on: ubuntu-latest
-    environment: DEMO
+#    environment: DEMO
     env:
       ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
