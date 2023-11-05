@@ -40,7 +40,7 @@ jobs:
           TEMP=$(terraform output vtas_host_ip_addr)
           VTAS_HOST_IP_ADDR=$(echo $TEMP | tr -d '"')
           echo "::set-output name=vtas_ip_addr::${VTAS_HOST_IP_ADDR}"
-          echo VTAS_HOST_IP_ADDR=${VTAS_HOST_IP_ADDR}
+          echo vtas_ip_addr=${VTAS_HOST_IP_ADDR}
       - name: Initialise plan for ephemeral infrastructure
         working-directory: ./terraform/repo
         run: terraform init
@@ -54,7 +54,7 @@ jobs:
           TEMP=$(terraform output repo_host_ip_addr)
           REPO_HOST_IP_ADDR=$(echo $TEMP | tr -d '"')
           echo "::set-output name=repo_ip_addr::${REPO_HOST_IP_ADDR}"
-          echo REPO_HOST_IP_ADDR=${REPO_HOST_IP_ADDR}
+          echo repo_ip_addr=${REPO_HOST_IP_ADDR}
 
   install-vtas:
     name: Install VTAS and drivers
@@ -97,10 +97,8 @@ jobs:
           VTAS_HOST: ${{needs.provision-infrastructure.outputs.vtas_ip_addr}}
           REPO_HOST: ${{needs.provision-infrastructure.outputs.repo_ip_addr}}
         run: |
-          # REPO_HOST=$(az vm show -d -g keeonline-rg -n keeonline-repo-vm --query publicIps -o tsv)
           echo [linux] > hosts
           echo repository ansible_host=${REPO_HOST} >> hosts
-          # echo vtas ansible_host=$(az vm show -d -g keeonline-rg -n keeonline-vtas-vm --query publicIps -o tsv) >> hosts
           echo vtas ansible_host=${VTAS_HOST} >> hosts
           echo "" >> hosts
           cat hosts          
