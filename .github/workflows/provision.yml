@@ -22,6 +22,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup terraform
         uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
       - name: Initialise plan for core infrastructure
         working-directory: ./terraform/core
         run: terraform init
@@ -32,8 +34,10 @@ jobs:
       - name: Show VTAS host IP address
         working-directory: ./terraform/core
         run: |
-          echo ****** terraform VTAS HOST IP=$(terraform output vtas_host_ip_addr)
-          echo ****** github VTAS HOST IP=${{ steps.apply_core.outputs.vtas_host_ip_addr }}
+          TF_VTAS_HOST_IP_ADDR=$(terraform output vtas_host_ip_addr)
+          GH_VTAS_HOST_IP_ADDR=${{ steps.apply_core.outputs.vtas_host_ip_addr }}
+          echo ****** terraform VTAS HOST IP=${TF_VTAS_HOST_IP_ADDR}
+          echo ****** github VTAS HOST IP=${GH_VTAS_HOST_IP_ADDR}
       - name: Initialise plan for ephemeral infrastructure
         working-directory: ./terraform/repo
         run: terraform init
