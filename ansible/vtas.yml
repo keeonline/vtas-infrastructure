@@ -1,4 +1,5 @@
 - name: Install VTAS product on host
   hosts: vtas
+  gather_facts: no
   roles:
     - install_vtas
