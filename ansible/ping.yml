@@ -1,6 +1,0 @@
-- name: Ping linux hosts
-  hosts: linux
-  gather_facts: no
-  tasks:
-    - name: Ping linux hosts
-      ansible.builtin.ping:

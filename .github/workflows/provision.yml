@@ -17,74 +17,38 @@ jobs:
       ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
       ARM_ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
-
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-
       - name: Setup terraform
         uses: hashicorp/setup-terraform@v2
-
       - name: Initialise plan for core infrastructure
         working-directory: ./terraform/core
         run: terraform init
-
       - name: Apply plan for core infrastructure
         working-directory: ./terraform/core
         run: terraform apply --auto-approve
-
       - name: Initialise plan for ephemeral infrastructure
         working-directory: ./terraform/repo
         run: terraform init
-
       - name: Apply plan for ephemeral infrastructure
         working-directory: ./terraform/repo
         run: terraform apply --auto-approve
-
-  # provision-ephemeral-infrastructure:
-  #   name: Provision ephemeral infrastructure
-  #   needs: [provision-core-infrastructure]
-  #   runs-on: ubuntu-latest
-  #   environment: DEMO
-  #   env:
-  #     ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
-  #     ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
-  #     ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
-  #     ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-  #     ARM_ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
-
-  #   steps:
-  #     - name: Checkout source code
-  #       uses: actions/checkout@v4
-
-  #     - name: Setup terraform
-  #       uses: hashicorp/setup-terraform@v2
-
-  #     - name: Initialise infrastructure plan
-  #       working-directory: ./terraform/repo
-  #       run: terraform init
-
-  #     - name: Apply infrastructure plan
-  #       working-directory: ./terraform/repo
-  #       run: terraform apply --auto-approve
 
   install-vtas:
     name: Install VTAS and drivers
     needs: [provision-infrastructure]
     runs-on: ubuntu-latest
     environment: DEMO
-
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-
       - name: Setup Ansible on GHR
         run: |
           sudo apt update
           sudo apt install software-properties-common
           sudo add-apt-repository --yes --update ppa:ansible/ansible
           sudo apt install ansible -y
-
       - name: Setup Azure CLI on GHR
         run: |
           sudo apt-get update
@@ -95,24 +59,24 @@ jobs:
           AZ_DIST=$(lsb_release -cs)
           echo "deb [arch=`dpkg --print-architecture` signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/azure-cli/ $AZ_DIST main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
           sudo apt-get update
-          sudo apt-get install azure-cli
-          
+          sudo apt-get install azure-cli          
       - name: 'Az CLI login'
         uses: azure/login@v1
         with:
             client-id: ${{ secrets.DEMO_CLIENT_ID }}
             tenant-id: ${{ secrets.TENANT_ID }}
-            subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
-                                            
+            subscription-id: ${{ secrets.SUBSCRIPTION_ID }}                                            
       - name: 'Create hosts file'
         working-directory: ./ansible
         run: |
+          REPO_HOST=$(az vm show -d -g keeonline-rg -n keeonline-repo-vm --query publicIps -o tsv)
           echo [linux] >> hosts
-          echo repository ansible_host=$(az vm show -d -g keeonline-rg -n keeonline-repo-vm --query publicIps -o tsv) >> hosts
+          # echo repository ansible_host=$(az vm show -d -g keeonline-rg -n keeonline-repo-vm --query publicIps -o tsv) >> hosts
+          echo repository ansible_host=${REPO_HOST} >> hosts
           echo vtas ansible_host=$(az vm show -d -g keeonline-rg -n keeonline-vtas-vm --query publicIps -o tsv) >> hosts
           echo "" >> hosts
-          cat hosts
-                              
+          cat hosts          
+          echo "REPO_HOST=${REPO_HOST}" >> "$GITHUB_ENV"                    
       - name: Install VTAS and start on host
         working-directory: ./ansible
         env:
@@ -120,15 +84,7 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.TENANT_ID }}
           AZURE_CLIENT_ID: ${{ secrets.DEMO_CLIENT_ID }}
         run: |
-          # ansible-playbook -i hosts -v ping.yml
-          ansible-playbook -i hosts -v vtas.yml
-          # docker run --rm --name ansible-runner \
-          # -e AZURE_SUBSCRIPTION_ID=${{ secrets.SUBSCRIPTION_ID }} \
-          # -e AZURE_TENANT_ID=${{ secrets.TENANT_ID }} \
-          # -e AZURE_CLIENT_ID=${{ secrets.DEMO_CLIENT_ID }} \
-          # -e ANSIBLE_PLAYBOOK vtas.yml \
-          # -v $(pwd):/usr/ansible \
-          # keeonline/ansible:latest
+          ansible-playbook -i hosts -v vtas.yml -e install_vtas_repository_host ${REPO_HOST}
 
   destroy-ephemeral-infrastructure:
     name: Destroy ephemeral infrastructure
@@ -141,20 +97,15 @@ jobs:
       ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
       ARM_ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
-
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-
       - name: Setup terraform
         uses: hashicorp/setup-terraform@v2
-
       - name: Initialise infrastructure plan
         working-directory: ./terraform/repo
         run: terraform init
-
       - name: Apply infrastructure plan
         working-directory: ./terraform/repo
         run: terraform destroy --auto-approve
-
-        
+    
