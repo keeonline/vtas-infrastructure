@@ -36,7 +36,8 @@ jobs:
         run: |
           TEMP=$(terraform output vtas_host_ip_addr)
           VTAS_HOST_IP_ADDR=$(echo $TEMP | tr -d '"')
-          echo ****** VTAS HOST IP=${TF_VTAS_HOST_IP}
+          echo ****** VTAS HOST IP=${VTAS_HOST_IP_ADDR}
+          echo !!!!!! ${{ steps.apply_core.outputs.vtas_host_ip_addr }}
       - name: Initialise plan for ephemeral infrastructure
         working-directory: ./terraform/repo
         run: terraform init
