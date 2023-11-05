@@ -51,7 +51,7 @@ jobs:
         id: repo
         working-directory: ./terraform/repo
         run: |
-          TEMP=$(terraform output vtas_host_ip_addr)
+          TEMP=$(terraform output repo_host_ip_addr)
           REPO_HOST_IP_ADDR=$(echo $TEMP | tr -d '"')
           echo "::set-output name=repo_ip_addr::${REPO_HOST_IP_ADDR}"
           echo REPO_HOST_IP_ADDR=${REPO_HOST_IP_ADDR}
