@@ -71,7 +71,6 @@ jobs:
         run: |
           REPO_HOST=$(az vm show -d -g keeonline-rg -n keeonline-repo-vm --query publicIps -o tsv)
           echo [linux] >> hosts
-          # echo repository ansible_host=$(az vm show -d -g keeonline-rg -n keeonline-repo-vm --query publicIps -o tsv) >> hosts
           echo repository ansible_host=${REPO_HOST} >> hosts
           echo vtas ansible_host=$(az vm show -d -g keeonline-rg -n keeonline-vtas-vm --query publicIps -o tsv) >> hosts
           echo "" >> hosts
@@ -86,8 +85,8 @@ jobs:
         run: |
           ansible-playbook -i hosts -v vtas.yml -e "install_vtas_repository_host=${REPO_HOST}"
 
-  destroy-ephemeral-infrastructure:
-    name: Destroy ephemeral infrastructure
+  decommission-ephemeral-infrastructure:
+    name: Decommission ephemeral infrastructure
     needs: [install-vtas]
     runs-on: ubuntu-latest
     environment: DEMO
