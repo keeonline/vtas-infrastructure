@@ -120,5 +120,4 @@
 
 - name: Start the VTAS
   ansible.builtin.shell: 
-#    cmd: '{{ install_vtas_home_dir }}/bin/vtas.sh > ~/vtas.log &'
     cmd: '( ( nohup {{ install_vtas_home_dir }}/bin/vtas.sh > ~/vtas.log ) & )'

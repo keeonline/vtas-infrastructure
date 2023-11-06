@@ -10,7 +10,6 @@ jobs:
   provision-infrastructure:
     name: Provision VTAS infrastructure
     runs-on: ubuntu-latest
-#    environment: DEMO
     env:
       ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
@@ -39,7 +38,8 @@ jobs:
         run: |
           TEMP=$(terraform output vtas_host_ip_addr)
           VTAS_HOST_IP_ADDR=$(echo $TEMP | tr -d '"')
-          echo "::set-output name=vtas_ip_addr::${VTAS_HOST_IP_ADDR}"
+          #echo "::set-output name=vtas_ip_addr::${VTAS_HOST_IP_ADDR}"
+          echo "vtas_ip_addr=${VTAS_HOST_IP_ADDR}" >> $GITHUB_OUTPUT
           echo vtas_ip_addr=${VTAS_HOST_IP_ADDR}
       - name: Initialise plan for ephemeral infrastructure
         working-directory: ./terraform/repo
@@ -53,14 +53,14 @@ jobs:
         run: |
           TEMP=$(terraform output repo_host_ip_addr)
           REPO_HOST_IP_ADDR=$(echo $TEMP | tr -d '"')
-          echo "::set-output name=repo_ip_addr::${REPO_HOST_IP_ADDR}"
+          # echo "::set-output name=repo_ip_addr::${REPO_HOST_IP_ADDR}"
+          echo "repo_ip_addr=${REPO_HOST_IP_ADDR}" >> $GITHUB_OUTPUT  
           echo repo_ip_addr=${REPO_HOST_IP_ADDR}
 
   install-vtas:
     name: Install VTAS and drivers
     needs: [provision-infrastructure]
     runs-on: ubuntu-latest
-#    environment: DEMO
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
